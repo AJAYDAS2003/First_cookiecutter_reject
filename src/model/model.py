@@ -52,7 +52,7 @@ def main():
         clf.fit(X_train, y_train)
         logger.info("Model training completed.")
 
-        model_path = 'model.pkl'
+        model_path = 'models/model.pkl'
         with open(model_path, 'wb') as model_file:
             pickle.dump(clf, model_file)
         logger.info(f"Model saved to {model_path}")
