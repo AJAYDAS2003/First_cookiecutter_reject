@@ -28,7 +28,7 @@ def main():
         logger.info("Model loaded successfully.")
 
         logger.info("Loading test dataset...")
-        test_data = pd.read_csv('./data/features/test_tfidf.csv')  # or test_tfidf.csv
+        test_data = pd.read_csv('data/features/test_tfidf.csv')  # or test_tfidf.csv
         logger.info(f"Test data loaded. Shape: {test_data.shape}")
 
         X_test = test_data.iloc[:, :-1].values

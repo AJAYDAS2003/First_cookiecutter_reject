@@ -60,13 +60,13 @@ stages:
     deps:
     - path: data/features
       hash: md5
-      md5: 43a669f54455da051f52373d3eca4d84.dir
-      size: 15597916
+      md5: 24a293df824fea979b2299ceda47853e.dir
+      size: 31951341
       nfiles: 2
     - path: src/model/model.py
       hash: md5
-      md5: 274ec0d5de2ba6d00e2ad8ac8d630386
-      size: 2435
+      md5: e6500fc9acbcb2bc73ce52a48e36715a
+      size: 2953
     params:
       params.yaml:
         Model_Building.learning_rate: 0.3
@@ -74,24 +74,28 @@ stages:
     outs:
     - path: models/model.pkl
       hash: md5
-      md5: c441c4883e87b553bf9cb468712914ff
-      size: 107283
+      md5: 9a8509def5a93ea6b247533b3917ebb3
+      size: 106995
   Model_Evaluation:
     cmd: python src/model/metrics.py
     deps:
+    - path: data/features/test_tfidf.csv
+      hash: md5
+      md5: 8e44bc1b8284cfd0620475783fdcef2a
+      size: 6389292
     - path: models/model.pkl
       hash: md5
-      md5: c441c4883e87b553bf9cb468712914ff
-      size: 107283
+      md5: 9a8509def5a93ea6b247533b3917ebb3
+      size: 106995
     - path: src/model/metrics.py
       hash: md5
-      md5: 4bef43446208bd5ea0c6508227d7edfb
-      size: 2247
+      md5: bf39457b16ef0cad08db57047a910564
+      size: 2876
     outs:
     - path: reports/metrics.json
       hash: md5
-      md5: dee82f06b489ed05e1a28c82383cea8c
-      size: 145
+      md5: 447956dabb223eccddef6dbb8152df80
+      size: 122
   Data_Ingestion:
     cmd: python src/data/Data_ingestion.py
     deps:

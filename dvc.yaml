@@ -41,7 +41,7 @@ stages:
     cmd: python src/model/metrics.py
     deps:
       - models/model.pkl
-      - data/features/test_bow.csv   # or test_tfidf.csv if used
+      - data/features/test_tfidf.csv   # or test_tfidf.csv if used
       - src/model/metrics.py
     metrics:
       - reports/metrics.json
