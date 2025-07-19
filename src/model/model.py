@@ -36,23 +36,36 @@ def load_yaml_param(path, section, key):
 
 def main():
     try:
-        logger.info("Loading training feature data...")
-        train_data = pd.read_csv('./data/features/train_bow.csv')
+        # Load training feature data
+        feature_path = './data/features/train_tfidf.csv'  # or change to train_tfidf.csv if needed
+        logger.info(f"Loading training feature data from {feature_path}...")
+        train_data = pd.read_csv(feature_path)
         logger.info(f"Training data loaded successfully. Shape: {train_data.shape}")
 
+        if train_data.shape[0] == 0 or train_data.shape[1] < 2:
+            raise ValueError("Training data is empty or doesn't have sufficient columns.")
+
+        # Load model hyperparameters
         n_estimators = load_yaml_param('params.yaml', 'Model_Building', 'n_estimators')
         learning_rate = load_yaml_param('params.yaml', 'Model_Building', 'learning_rate')
+
         logger.info(f"Using GradientBoostingClassifier with n_estimators={n_estimators}, learning_rate={learning_rate}")
 
+        # Split features and labels
         X_train = train_data.iloc[:, :-1].values
         y_train = train_data.iloc[:, -1].values
 
+        # Train model
         logger.info("Training the GradientBoostingClassifier...")
         clf = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate)
         clf.fit(X_train, y_train)
         logger.info("Model training completed.")
 
-        model_path = 'models/model.pkl'
+        # Save model
+        model_dir = 'models'
+        os.makedirs(model_dir, exist_ok=True)
+        model_path = os.path.join(model_dir, 'model.pkl')
+
         with open(model_path, 'wb') as model_file:
             pickle.dump(clf, model_file)
         logger.info(f"Model saved to {model_path}")

@@ -1,42 +1,47 @@
 stages:
-  Data_Ingetion:
+  Data_Ingestion:
     cmd: python src/data/Data_ingestion.py
     deps:
-    - src/data/Data_ingestion.py
+      - src/data/Data_ingestion.py
     params:
-    - Data_Ingestion.test_size
+      - Data_Ingestion.test_size
     outs:
-    - data/raw
+      - data/raw
+
   Data_Preprocessing:
     cmd: python src/data/Data_preprocessing.py
     deps:
-    - data/raw
-    - src/data/Data_preprocessing.py
+      - data/raw
+      - src/data/Data_preprocessing.py
     outs:
-    - data/processed
+      - data/processed
+
   Feature_Engineering:
     cmd: python src/features/feature_engineering.py
     deps:
-    - data/processed
-    - src/features/feature_engineering.py
+      - data/processed
+      - src/features/feature_engineering.py
     params:
-    - Feature_Engineering.max_features
+      - Feature_Engineering.max_features
     outs:
-    - data/features
+      - data/features
+
   Model_Building:
     cmd: python src/model/model.py
     deps:
-    - data/features
-    - src/model/model.py
+      - data/features
+      - src/model/model.py
     params:
-    - Model_Building.n_estimators
-    - Model_Building.learning_rate
+      - Model_Building.n_estimators
+      - Model_Building.learning_rate
     outs:
-    - models/model.pkl
+      - models/model.pkl
+
   Model_Evaluation:
     cmd: python src/model/metrics.py
     deps:
-    - models/model.pkl
-    - src/model/metrics.py
+      - models/model.pkl
+      - data/features/test_bow.csv   # or test_tfidf.csv if used
+      - src/model/metrics.py
     metrics:
-    - reports/metrics.json
+      - reports/metrics.json

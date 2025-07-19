@@ -6,7 +6,7 @@ import nltk
 import logging
 import string
 from nltk.corpus import stopwords
-from nltk.stem import SnowballStemmer, WordNetLemmatizer
+from nltk.stem import WordNetLemmatizer
 
 # Setup logging
 logging.basicConfig(
@@ -27,10 +27,13 @@ except Exception as e:
     logger.error(f"Error downloading NLTK resources: {e}")
     raise
 
+# Initialize once globally
+stop_words = set(stopwords.words("english"))
+lemmatizer = WordNetLemmatizer()
+
 # Text cleaning functions
 def lemmatization(text):
     try:
-        lemmatizer = WordNetLemmatizer()
         return " ".join([lemmatizer.lemmatize(word) for word in text.split()])
     except Exception as e:
         logger.error(f"Error in lemmatization: {e}")
@@ -38,7 +41,6 @@ def lemmatization(text):
 
 def remove_stop_words(text):
     try:
-        stop_words = set(stopwords.words("english"))
         return " ".join([word for word in str(text).split() if word not in stop_words])
     except Exception as e:
         logger.error(f"Error removing stop words: {e}")
@@ -46,45 +48,47 @@ def remove_stop_words(text):
 
 def removing_numbers(text):
     try:
-        return ''.join([ch for ch in text if not ch.isdigit()])
+        return re.sub(r'\d+', '', text)
     except Exception as e:
         logger.error(f"Error removing numbers: {e}")
         return text
 
 def lower_case(text):
     try:
-        return " ".join([word.lower() for word in text.split()])
+        return text.lower()
     except Exception as e:
         logger.error(f"Error converting to lower case: {e}")
         return text
 
 def removing_punctuations(text):
     try:
-        text = re.sub('[%s]' % re.escape("""!"#$%&'()*+,،-./:;<=>؟?@[\]^_`{|}~"""), ' ', text)
-        text = text.replace('؛', "")
-        text = re.sub('\s+', ' ', text)
-        return " ".join(text.split()).strip()
+        text = re.sub(f"[{re.escape(string.punctuation)}]", " ", text)
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
     except Exception as e:
         logger.error(f"Error removing punctuations: {e}")
         return text
 
 def removing_urls(text):
     try:
-        url_pattern = re.compile(r'https?://\S+|www\.\S+')
-        return url_pattern.sub(r'', text)
+        return re.sub(r'https?://\S+|www\.\S+', '', text)
     except Exception as e:
         logger.error(f"Error removing URLs: {e}")
         return text
 
 def normalize_text(df):
     try:
+        if 'content' not in df.columns:
+            raise KeyError("'content' column not found in DataFrame.")
+        
         logger.info("Starting text normalization...")
-        df['content'] = df['content'].apply(lower_case)
-        df['content'] = df['content'].apply(remove_stop_words)
-        df['content'] = df['content'].apply(removing_numbers)
-        df['content'] = df['content'].apply(removing_punctuations)
-        df['content'] = df['content'].apply(removing_urls)
-        df['content'] = df['content'].apply(lemmatization)
+        df['content'] = df['content'].astype(str)
+        df['content'] = df['content'].apply(lower_case)\
+                                     .apply(remove_stop_words)\
+                                     .apply(removing_numbers)\
+                                     .apply(removing_punctuations)\
+                                     .apply(removing_urls)\
+                                     .apply(lemmatization)
         logger.info("Text normalization completed.")
         return df
     except Exception as e:

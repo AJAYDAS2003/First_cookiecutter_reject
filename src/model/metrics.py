@@ -2,8 +2,12 @@ import numpy as np
 import pandas as pd
 import pickle
 import json
+import os
 import logging
-from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score,
+    roc_auc_score, f1_score
+)
 
 # Setup logging
 logging.basicConfig(
@@ -18,13 +22,13 @@ logger = logging.getLogger(__name__)
 
 def main():
     try:
-        logger.info("Loading model from model.pkl...")
+        logger.info("Loading model from models/model.pkl...")
         with open('models/model.pkl', 'rb') as model_file:
             clf = pickle.load(model_file)
         logger.info("Model loaded successfully.")
 
         logger.info("Loading test dataset...")
-        test_data = pd.read_csv('./data/features/test_bow.csv')
+        test_data = pd.read_csv('./data/features/test_tfidf.csv')  # or test_tfidf.csv
         logger.info(f"Test data loaded. Shape: {test_data.shape}")
 
         X_test = test_data.iloc[:, :-1].values
@@ -32,27 +36,35 @@ def main():
 
         logger.info("Generating predictions...")
         y_pred = clf.predict(X_test)
-        y_pred_proba = clf.predict_proba(X_test)[:, 1]
+
+        # Predict probabilities only if classifier supports it
+        try:
+            y_pred_proba = clf.predict_proba(X_test)[:, 1]
+        except AttributeError:
+            y_pred_proba = None
+            logger.warning("Model does not support probability prediction. AUC will be skipped.")
 
         logger.info("Calculating evaluation metrics...")
-        accuracy = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred)
-        recall = recall_score(y_test, y_pred)
-        auc = roc_auc_score(y_test, y_pred_proba)
+        average_type = 'binary' if len(np.unique(y_test)) == 2 else 'macro'
 
         metrics_dict = {
-            'accuracy': accuracy,
-            'precision': precision,
-            'recall': recall,
-            'auc': auc
+            'accuracy': round(accuracy_score(y_test, y_pred), 4),
+            'precision': round(precision_score(y_test, y_pred, average=average_type), 4),
+            'recall': round(recall_score(y_test, y_pred, average=average_type), 4),
+            'f1_score': round(f1_score(y_test, y_pred, average=average_type), 4),
         }
 
-        logger.info(f"Metrics: {metrics_dict}")
+        if y_pred_proba is not None and average_type == 'binary':
+            metrics_dict['auc'] = round(roc_auc_score(y_test, y_pred_proba), 4)
 
-        metrics_path = 'reports/metrics.json'
-        with open(metrics_path, 'w', encoding='utf-8') as file:
-            json.dump(metrics_dict, file, indent=4)
-        logger.info(f"Metrics saved to {metrics_path}")
+        logger.info("Evaluation Metrics:")
+        for key, val in metrics_dict.items():
+            logger.info(f"{key}: {val}")
+
+        os.makedirs('reports', exist_ok=True)
+        with open('reports/metrics.json', 'w', encoding='utf-8') as f:
+            json.dump(metrics_dict, f, indent=4)
+        logger.info("Metrics saved to reports/metrics.json")
 
     except FileNotFoundError as fnf:
         logger.error(f"File not found: {fnf}")
